@@ -1,0 +1,74 @@
+name: Render Video
+
+# Manual-only trigger — choose composition + bitrate from the Actions tab.
+# No automatic renders on push; each render burns ~15-30 min of runner time
+# and you don't want every README edit to fire one.
+on:
+  workflow_dispatch:
+    inputs:
+      composition:
+        description: 'Composition ID (must match an id in src/Root.tsx)'
+        required: true
+        default: 'PassportRanking'
+        type: string
+      crf:
+        description: 'Quality (lower = higher quality, larger file). 18=visually lossless, 23=default, 28=smaller'
+        required: false
+        default: '23'
+        type: string
+
+jobs:
+  render:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      # Remotion renders via headless Chromium; these are the libs it needs
+      # on a stock ubuntu-22.04 runner. Source: Remotion's Linux deps doc.
+      - name: Install Chromium system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libnss3 \
+            libatk1.0-0 \
+            libatk-bridge2.0-0 \
+            libcups2 \
+            libdrm2 \
+            libxkbcommon0 \
+            libxcomposite1 \
+            libxdamage1 \
+            libxfixes3 \
+            libxrandr2 \
+            libgbm1 \
+            libasound2 \
+            libpango-1.0-0 \
+            libcairo2
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Render video
+        run: |
+          mkdir -p out
+          npx remotion render "${{ inputs.composition }}" \
+            "out/${{ inputs.composition }}.mp4" \
+            --concurrency=2 \
+            --crf=${{ inputs.crf }} \
+            --log=info
+
+      - name: Upload rendered video
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.composition }}-run${{ github.run_number }}
+          path: out/${{ inputs.composition }}.mp4
+          retention-days: 30
+          if-no-files-found: error
