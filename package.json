@@ -8,8 +8,8 @@
     "build:headtohead": "remotion render HeadToHead out/head-to-head.mp4",
     "build:chartrace": "remotion render ChartRace out/chart-race.mp4",
     "narrate:internet": "python scripts/generate_internet_narration.py",
-    "export:profile": "remotion still ProfileImage out/brand/profile.png",
-    "export:cover":   "remotion still CoverImage   out/brand/cover.png",
+    "export:profile": "remotion still ProfileImage brand/profile.png",
+    "export:cover":   "remotion still CoverImage brand/cover.png",
     "export:brand":   "npm run export:profile && npm run export:cover",
     "upgrade": "remotion upgrade"
   },

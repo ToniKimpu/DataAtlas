@@ -317,6 +317,7 @@ type StoryMoment = { year; title; body; accent? };
   - `npm run build:headtohead` → `out/head-to-head.mp4`
   - `npm run build:chartrace` → `out/chart-race.mp4`
 - **Studio preview**: `npm start` — opens Remotion Studio, scrub through any composition.
+- **Brand assets**: `src/brand/` holds two single-frame still compositions — `ProfileImage` (800×800 YouTube avatar) and `CoverImage` (2560×1440 channel banner, logo lockup kept inside the 1546×423 safe area). Vivid-blue field with an amber accent (`src/brand/theme.ts`), built around `BarMark` — a four-bar ascending chart mark (tallest bar gold). No map/globe. Export with `npm run export:brand` → `brand/profile.png` + `brand/cover.png`.
 
 ---
 
