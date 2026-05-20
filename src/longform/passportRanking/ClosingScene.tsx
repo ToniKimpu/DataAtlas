@@ -11,8 +11,9 @@ type Props = {
 };
 
 /**
- * Light-theme closing reveal: huge gold "#1", subtitle, divider, the tied-#1
- * countries as a flag row, footer with data source.
+ * Light-theme closing reveal: huge gold "#1", subtitle, divider, the top-ranked
+ * passport(s) as a flag row, footer with data source. `topGroup` holds every
+ * country sharing rank 1 — usually one, but the row handles a tie gracefully.
  */
 export const ClosingScene: React.FC<Props> = ({ startFrame, topGroup, totalCountries }) => {
   const frame = useCurrentFrame();
@@ -185,7 +186,7 @@ export const ClosingScene: React.FC<Props> = ({ startFrame, topGroup, totalCount
           opacity: footerT,
         }}
       >
-        Ranked {totalCountries} passports · Data: Henley Index 2024 baseline
+        Ranked {totalCountries} passports · Data: Henley Passport Index 2026
       </div>
     </div>
   );

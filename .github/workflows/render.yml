@@ -1,15 +1,26 @@
 name: Render Video
 
-# Manual-only trigger — choose composition + bitrate from the Actions tab.
+# Manual-only trigger — choose what to render + bitrate from the Actions tab.
 # No automatic renders on push; each render burns ~15-30 min of runner time
 # and you don't want every README edit to fire one.
+#
+# `composition` input:
+#   - "all" (default) → renders every longform composition, in parallel
+#   - a specific id (e.g. "HeadToHead") → renders just that one
+# Any id valid in src/Root.tsx works as a single render; only the "all" list
+# in the `setup` job below needs a line added when a new template ships.
+#
+# After the renders, the `publish` job attaches the finished MP4s to a rolling
+# "latest-renders" GitHub Release — downloadable from the repo's Releases page,
+# refreshed every run, and (unlike committing videos into git) with no
+# repo-history bloat.
 on:
   workflow_dispatch:
     inputs:
       composition:
-        description: 'Composition ID (must match an id in src/Root.tsx)'
+        description: 'Composition: "all" or a specific id from src/Root.tsx'
         required: true
-        default: 'PassportRanking'
+        default: 'all'
         type: string
       crf:
         description: 'Quality (lower = higher quality, larger file). 18=visually lossless, 23=default, 28=smaller'
@@ -18,9 +29,33 @@ on:
         type: string
 
 jobs:
+  # Resolve the `composition` input into a JSON array the render job fans out
+  # on — "all" expands to every composition, anything else renders solo.
+  setup:
+    runs-on: ubuntu-22.04
+    outputs:
+      matrix: ${{ steps.pick.outputs.matrix }}
+    steps:
+      - name: Build render matrix
+        id: pick
+        env:
+          COMPOSITION: ${{ inputs.composition }}
+        run: |
+          if [ "$COMPOSITION" = "all" ]; then
+            echo 'matrix=["PassportRanking","HeadToHead","ChartRace"]' >> "$GITHUB_OUTPUT"
+          else
+            echo "matrix=[\"$COMPOSITION\"]" >> "$GITHUB_OUTPUT"
+          fi
+
   render:
+    needs: setup
     runs-on: ubuntu-22.04
     timeout-minutes: 120
+    strategy:
+      # One composition failing must not cancel the others' renders.
+      fail-fast: false
+      matrix:
+        composition: ${{ fromJSON(needs.setup.outputs.matrix) }}
 
     steps:
       - name: Checkout
@@ -56,19 +91,60 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Render video
+      - name: Render ${{ matrix.composition }}
+        env:
+          COMPOSITION: ${{ matrix.composition }}
+          CRF: ${{ inputs.crf }}
         run: |
           mkdir -p out
-          npx remotion render "${{ inputs.composition }}" \
-            "out/${{ inputs.composition }}.mp4" \
+          npx remotion render "$COMPOSITION" \
+            "out/$COMPOSITION.mp4" \
             --concurrency=2 \
-            --crf=${{ inputs.crf }} \
+            --crf="$CRF" \
             --log=info
 
       - name: Upload rendered video
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ inputs.composition }}-run${{ github.run_number }}
-          path: out/${{ inputs.composition }}.mp4
+          name: ${{ matrix.composition }}-run${{ github.run_number }}
+          path: out/${{ matrix.composition }}.mp4
           retention-days: 30
           if-no-files-found: error
+
+  # Collect every rendered MP4 and attach them to a rolling GitHub Release.
+  # Runs once, after all render jobs succeed.
+  publish:
+    needs: render
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # `merge-multiple` drops every artifact's contents straight into out/,
+      # with no per-artifact sub-folders → out/PassportRanking.mp4, etc.
+      - name: Download rendered videos
+        uses: actions/download-artifact@v4
+        with:
+          path: out
+          merge-multiple: true
+
+      # One rolling release, tag "latest-renders". `--clobber` overwrites any
+      # asset of the same name, so each run refreshes the videos in place —
+      # rendering a single composition only replaces that one asset.
+      - name: Publish videos to the latest-renders Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: latest-renders
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Updating existing release: $TAG"
+            gh release upload "$TAG" out/*.mp4 --clobber
+          else
+            echo "Creating release: $TAG"
+            gh release create "$TAG" out/*.mp4 \
+              --title "Latest video renders" \
+              --notes "Most recent video renders — refreshed automatically by the Render Video workflow."
+          fi

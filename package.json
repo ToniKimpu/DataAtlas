@@ -5,6 +5,8 @@
   "scripts": {
     "start": "remotion studio",
     "build:passport": "remotion render PassportRanking out/passport-ranking.mp4",
+    "build:headtohead": "remotion render HeadToHead out/head-to-head.mp4",
+    "build:chartrace": "remotion render ChartRace out/chart-race.mp4",
     "narrate:internet": "python scripts/generate_internet_narration.py",
     "export:profile": "remotion still ProfileImage out/brand/profile.png",
     "export:cover":   "remotion still CoverImage   out/brand/cover.png",

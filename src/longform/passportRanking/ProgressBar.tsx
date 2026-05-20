@@ -26,23 +26,23 @@ export const ProgressBar: React.FC<Props> = ({ startFrame, endFrame }) => {
     <div
       style={{
         position: "absolute",
-        bottom: 44,
+        bottom: 48,
         left: 80,
         right: 80,
         display: "flex",
         alignItems: "center",
-        gap: 16,
+        gap: 22,
         pointerEvents: "none",
       }}
     >
       <div
         style={{
           flex: 1,
-          height: 14,
+          height: 26,
           borderRadius: 999,
           background: palette.bgAlt,
-          border: `1.5px solid ${palette.border}`,
-          boxShadow: `inset 0 1px 3px ${palette.shadow}`,
+          border: `2px solid ${palette.borderDeep}`,
+          boxShadow: `inset 0 2px 5px ${palette.shadow}, 0 8px 22px ${palette.shadowDeep}`,
           overflow: "hidden",
           position: "relative",
         }}
@@ -53,33 +53,47 @@ export const ProgressBar: React.FC<Props> = ({ startFrame, endFrame }) => {
             height: "100%",
             background: `linear-gradient(90deg, ${palette.brand}, #F59E0B 50%, #E11D48)`,
             borderRadius: 999,
-            boxShadow: `0 0 12px ${palette.brand}55`,
+            boxShadow: `0 0 20px ${palette.brand}77`,
+          }}
+        />
+        {/* Glossy highlight strip along the top of the fill */}
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            top: 3,
+            width: `${t * 100}%`,
+            height: 7,
+            borderRadius: 999,
+            background:
+              "linear-gradient(180deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 100%)",
+            pointerEvents: "none",
           }}
         />
         {/* Moving head dot — sits at the leading edge of the fill */}
         <div
           style={{
             position: "absolute",
-            left: `calc(${t * 100}% - 11px)`,
+            left: `calc(${t * 100}% - 19px)`,
             top: "50%",
             transform: "translateY(-50%)",
-            width: 22,
-            height: 22,
+            width: 38,
+            height: 38,
             borderRadius: 999,
             background: "#FFFFFF",
-            border: `3px solid ${palette.brand}`,
-            boxShadow: `0 4px 10px ${palette.shadowDeep}, 0 0 0 4px ${palette.brand}22`,
+            border: `5px solid ${palette.brand}`,
+            boxShadow: `0 6px 16px ${palette.shadowDeep}, 0 0 0 6px ${palette.brand}22`,
           }}
         />
       </div>
       <div
         style={{
-          fontSize: 18,
+          fontSize: 30,
           fontWeight: 900,
           color: palette.text,
           letterSpacing: 1,
           fontFamily: "'Inter', 'Segoe UI', system-ui, sans-serif",
-          minWidth: 60,
+          minWidth: 92,
           textAlign: "right",
         }}
       >

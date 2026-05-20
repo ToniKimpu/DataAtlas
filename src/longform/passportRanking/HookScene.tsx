@@ -16,7 +16,7 @@ type Props = {
  *   ─ passport icon emblem (decorative)
  *   ─ big title "WORLD'S STRONGEST PASSPORTS" (PASSPORTS in brand-blue)
  *   ─ subtitle "Visa-free destinations by country"
- *   ─ teaser strip: tied #1 country flags lined up with "FEATURING" caption
+ *   ─ teaser strip: the six strongest passport flags with a "FEATURING" caption
  *
  * The whole thing fades out over the last 18 frames; the carousel
  * crossfades in below.
@@ -72,9 +72,8 @@ export const HookScene: React.FC<Props> = ({ endFrame }) => {
     extrapolateRight: "clamp",
   });
 
-  // Top-tier countries to tease at the bottom
-  const topRank = PASSPORTS_BY_RANK[0]?.rank ?? 1;
-  const featured = PASSPORTS_BY_RANK.filter((p) => p.rank === topRank).slice(0, 6);
+  // The six strongest passports, teased at the bottom of the hook.
+  const featured = PASSPORTS_BY_RANK.slice(0, 6);
 
   return (
     <div
